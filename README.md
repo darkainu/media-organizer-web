@@ -12,15 +12,24 @@ A Python desktop application that organizes media files (images and videos) by d
 
 ## Installation
 
-1. Clone the repository
-2. Install requirements:
-   ```pip install -r requirements.txt```
-3. Run the application:
-   ```python media_organizer.py```
+1. Install Miniconda from: https://docs.conda.io/en/latest/miniconda.html
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/darkainu/media-organizer.git
+3. Edit config.env with your username
+4. Run the install:
+    chmod +x install.sh
+    ./install.sh
 
 ## Usage
 
-1. Click "Select Folder" to choose the directory containing media files
-2. Click "Organize Files" to start organizing
-3. Use "Undo Last Organization" if needed
+Launch the application either:
 
+From your applications menu
+Using the command: ./launch_media_organizer.sh
+
+Then:
+
+Click "Select Folder" to choose the directory containing media files
+Click "Organize Files" to start organizing
+Use "Undo Last Organization" if needed
