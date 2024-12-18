@@ -1,48 +1,106 @@
+let selectedFolderPath = null;
+let isOrganizing = false;
+
 document.addEventListener('DOMContentLoaded', () => {
     const selectFolderBtn = document.getElementById('selectFolderBtn');
     const organizeBtn = document.getElementById('organizeBtn');
-    const status = document.getElementById('status');
-    let selectedPath = null;
+    const undoBtn = document.getElementById('undoBtn');
+    const progressBar = document.getElementById('progressBar').querySelector('.progress-fill');
+    const progressText = document.getElementById('progressText');
+    const folderPath = document.getElementById('folderPath');
+    const organizationStatus = document.getElementById('organizationStatus');
 
     selectFolderBtn.addEventListener('click', async () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.webkitdirectory = true;
-        input.directory = true;
-        input.addEventListener('change', (e) => {
-            const files = e.target.files;
-            if (files.length > 0) {
-                // Set the correct full path including Downloads directory
-                const paths = Array.from(files).map(file => file.webkitRelativePath);
-                const parentPath = paths[0].split('/')[0];
-                selectedPath = `/home/darkainu/Downloads/${parentPath}`;
-                status.textContent = `Selected folder: ${selectedPath}`;
+        try {
+            const dirHandle = await window.showDirectoryPicker({
+                mode: 'readwrite',
+                startIn: 'downloads',
+                types: [{
+                    description: 'Media Files',
+                    accept: {
+                        'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.heic'],
+                        'video/*': ['.mp4', '.mov', '.avi']
+                    }
+                }],
+                excludeAcceptAllOption: false
+            });
+
+            // Verify we have permission
+            const permissionStatus = await dirHandle.queryPermission({ mode: 'readwrite' });
+            if (permissionStatus !== 'granted') {
+                await dirHandle.requestPermission({ mode: 'readwrite' });
             }
-        });
-        input.click();
+
+            selectedFolderPath = dirHandle.name;
+            folderPath.textContent = selectedFolderPath;
+            organizeBtn.disabled = false;
+            organizationStatus.textContent = '';
+        } catch (err) {
+            console.error('Error selecting folder:', err);
+        }
     });
 
     organizeBtn.addEventListener('click', async () => {
-        if (!selectedPath) {
-            status.textContent = 'Please select a folder first';
-            return;
-        }
+        if (!selectedFolderPath || isOrganizing) return;
+
+        isOrganizing = true;
+        organizeBtn.disabled = true;
+        progressBar.style.width = '0%';
+        organizationStatus.textContent = 'Organizing files...';
 
         try {
             const response = await fetch('/organize', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ folderPath: selectedPath })
+                body: JSON.stringify({ folderPath: selectedFolderPath })
             });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+
+            if (response.ok) {
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                organizationStatus.textContent = `Success! Organized ${data.organized_files} files.`;
+                undoBtn.disabled = false;
+            } else {
+                throw new Error(data.error);
             }
-            const result = await response.json();
-            status.textContent = result.message;
         } catch (error) {
-            status.textContent = `Error: ${error.message}`;
+            organizationStatus.textContent = `Error: ${error.message}`;
+        } finally {
+            isOrganizing = false;
+            organizeBtn.disabled = false;
+        }
+    });
+
+    undoBtn.addEventListener('click', async () => {
+        if (isOrganizing) return;
+
+        try {
+            undoBtn.disabled = true;
+            organizationStatus.textContent = 'Undoing changes...';
+
+            const response = await fetch('/undo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ folderPath: selectedFolderPath })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                organizationStatus.textContent = 'Changes reverted successfully!';
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            organizationStatus.textContent = `Error: ${error.message}`;
+        } finally {
+            undoBtn.disabled = false;
         }
     });
 });

@@ -1,30 +1,35 @@
 # Media Organizer Web
 
-A web-based media file organizer that automatically sorts your photos and videos into year/month folders.
+A web-based media file organizer that helps you sort photos and videos into Year/Month folders automatically.
 
 ## Features
-- Organize media files by date taken
-- Simple web interface
-- Works with local files
-- Supports various formats (PNG, JPG, JPEG, GIF, MP4, MOV, AVI, HEIC, WEBP)
+- Organize media files into Year/Month folders
+- Smart date detection using EXIF data
+- Supports multiple formats (PNG, JPG, JPEG, GIF, HEIC, MP4, MOV, AVI)
+- Clean web interface
+- Progress tracking
+- Undo functionality
+- PWA support for offline access
 
 ## Installation
-
 1. Clone the repository:
-    ```bash
-    git clone https://github.com/yourusername/media-organizer-web.git
-    cd media-organizer-web
-2. Create a virtual environment
-    conda create -n mediaorg python=3.8
-    conda activate mediaorg
-3. Install dependencies:
-    pip install -r requirements.txt
+```bash
+git clone https://github.com/darkainu/media-organizer-web.git
+cd media-organizer-web
+
+2. Install dependencies:
+pip install -r requirements.txt
+
+3. Run the application:
+python app.py
 
 ## Usage
-1. Run the application:
-    python app.py
-2. Open your browser and go to: http://localhost:5000
-3. Select a folder containing media files
-4. Click "Organize Files"
+1. Open your browser to http://localhost:5000
+2. Select a folder containing your media files
+3. Click "Organize Files" to start
+4. Use "Undo Changes" if needed
 
-Your files will be organized into year/month folders!
+## Requirements
+1. Python 3.8+
+2. Flask
+3. Pillow

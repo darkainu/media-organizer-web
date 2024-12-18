@@ -11,21 +11,18 @@ from pathlib import Path
 class MediaOrganizerApp:
     def __init__(self, root):
         self.root = root
-        # Enable DPI awareness
-        self.root.tk.call('tk', 'scaling', 2.0)  # Increase default scaling
+        self.root.tk.call('tk', 'scaling', 2.0)
         self.root.title("Media File Organizer")
-        self.root.geometry("1024x768")  # Larger default size
+        self.root.geometry("1024x768")
 
-        # Configure main container with weights
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        # Create scrollable frame
         self.main_frame = ttk.Frame(self.root, padding="20")
         self.main_frame.grid(sticky="nsew")
         self.main_frame.grid_columnconfigure(0, weight=1)
 
-        self.moved_files = []  # Track moved files for undo
+        self.moved_files = []
         self.create_widgets()
 
     def create_widgets(self):
@@ -96,30 +93,26 @@ class MediaOrganizerApp:
 
     def get_date_taken(self, file_path):
         try:
+            # Try EXIF data first (most accurate for photos)
             with open(file_path, 'rb') as f:
-                tags = exifread.process_file(f)
+                tags = exifread.process_file(f, details=False)
                 if 'EXIF DateTimeOriginal' in tags:
                     date_str = str(tags['EXIF DateTimeOriginal'])
                     return datetime.strptime(date_str, '%Y:%m:%d %H:%M:%S')
 
-            img = Image.open(file_path)
-            if hasattr(img, '_getexif') and img._getexif() is not None:
-                exif = img._getexif()
-                if 36867 in exif:
-                    date_str = exif[36867]
-                    return datetime.strptime(date_str, '%Y:%m:%d %H:%M:%S')
-                print(f"No EXIF data found in: {os.path.basename(file_path)}")
-            else:
-                print(f"File format not recognized for: {os.path.basename(file_path)}")
+            # Try getting creation time and modified time
+            stat = os.stat(file_path)
+            creation_time = stat.st_birthtime if hasattr(stat, 'st_birthtime') else stat.st_ctime
+            modified_time = stat.st_mtime
 
-            return datetime.fromtimestamp(os.path.getmtime(file_path))
+            # Use the earlier of creation or modification time
+            earliest_time = min(creation_time, modified_time)
+            return datetime.fromtimestamp(earliest_time)
 
-        except Exception as e:
-            print(f"Error processing {os.path.basename(file_path)}: {str(e)}")
+        except Exception:
             return datetime.fromtimestamp(os.path.getmtime(file_path))
 
     def organize_files(self):
-        self.moved_files.clear()  # Clear previous moves
         if not hasattr(self, 'folder_path'):
             self.status_label.config(text="Please select a folder first!")
             return
@@ -129,6 +122,7 @@ class MediaOrganizerApp:
 
         self.progress['maximum'] = len(files)
         self.progress['value'] = 0
+        organized_files = []
 
         for i, file in enumerate(files):
             file_path = os.path.join(self.folder_path, file)
@@ -143,13 +137,14 @@ class MediaOrganizerApp:
             original_path = file_path
             shutil.move(file_path, destination)
 
-            # Track the move operation
             self.moved_files.append((destination, original_path))
+            organized_files.append(file)
 
             self.progress['value'] = i + 1
             self.root.update()
 
         self.status_label.config(text="Organization complete!")
+        return organized_files
 
     def undo_organization(self):
         if not self.moved_files:
@@ -170,6 +165,7 @@ class MediaOrganizerApp:
 
         self.moved_files.clear()
         self.status_label.config(text="Undo complete!")
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = MediaOrganizerApp(root)

@@ -1,15 +1,39 @@
 {
     "name": "Media Organizer",
     "short_name": "MediaOrg",
+    "description": "Organize your media files into Year/Month folders automatically",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#2196F3",
     "icons": [
         {
-            "src": "/static/icons/icon.png",
+            "src": "/static/icons/icon-192x192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/static/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "orientation": "any",
+    "categories": ["utilities", "productivity"],
+    "screenshots": [
+        {
+            "src": "/static/screenshots/desktop.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "platform": "wide"
+        },
+        {
+            "src": "/static/screenshots/mobile.png",
+            "sizes": "720x1280",
+            "type": "image/png",
+            "platform": "narrow"
         }
     ]
 }
